@@ -67,15 +67,18 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        // Aggiungi le proprietà personalizzate alla sessione
-        session.user = {
-          ...session.user,
+      // Usa un approccio più diretto per costruire l'oggetto session
+      return {
+        ...session,
+        user: {
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image,
+          // Aggiungi le proprietà personalizzate
           role: token.role as string,
           id: token.id as string
-        };
-      }
-      return session;
+        }
+      };
     }
   },
   pages: {
