@@ -27,7 +27,7 @@ export default function BookingCalendar({ properties }: BookingCalendarProps) {
   const [bookings, setBookings] = useState<BookingWithUnitAndGuest[]>([]);
   const [events, setEvents] = useState<EventInput[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const calendarRef = useRef<any>(null);
+  const calendarRef = useRef<FullCalendar | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
 

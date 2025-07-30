@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Property } from '@prisma/client';
 
 interface PLData {
@@ -26,13 +26,7 @@ export default function PLDashboard({ properties }: PLDashboardProps) {
 
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
-  useEffect(() => {
-    if (selectedProperty) {
-      fetchPLData();
-    }
-  }, [selectedProperty, selectedYear, selectedMonth]);
-
-  const fetchPLData = async () => {
+  const fetchPLData = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(
@@ -48,7 +42,13 @@ export default function PLDashboard({ properties }: PLDashboardProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedProperty, selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    if (selectedProperty) {
+      fetchPLData();
+    }
+  }, [selectedProperty, selectedYear, selectedMonth, fetchPLData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('it-IT', {

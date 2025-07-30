@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Property, Unit, UnitType } from '@prisma/client';
 
@@ -30,11 +30,7 @@ export default function PropertyManager() {
     notes: ''
   });
 
-  useEffect(() => {
-    fetchProperties();
-  }, []);
-
-  const fetchProperties = async () => {
+  const fetchProperties = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch('/api/properties?includeUnits=true');
@@ -50,7 +46,11 @@ export default function PropertyManager() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedProperty]);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
 
   const handleAddProperty = async (e: React.FormEvent) => {
     e.preventDefault();
