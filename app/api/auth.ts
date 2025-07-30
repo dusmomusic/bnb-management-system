@@ -3,6 +3,31 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 
+// Estendi i tipi per includere le proprietà personalizzate
+declare module "next-auth" {
+  interface User {
+    role?: string;
+    id?: string;
+  }
+  
+  interface Session {
+    user: {
+      role?: string;
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    }
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    role?: string;
+    id?: string;
+  }
+}
+
 const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
