@@ -3,30 +3,14 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 
-// Estendi i tipi per includere le proprietà personalizzate
-declare module "next-auth" {
-  interface User {
-    role?: string;
-    id?: string;
-  }
-  
-  interface Session {
-    user: {
-      role?: string;
-      id?: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-    }
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    role?: string;
-    id?: string;
-  }
-}
+// Definisci un tipo per l'utente con le proprietà che ci servono
+type UserWithRole = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role: string;
+};
 
 const prisma = new PrismaClient();
 
@@ -62,28 +46,34 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Restituisci un oggetto con le proprietà che ci servono
         return {
           id: user.id,
           name: user.name,
           email: user.email,
           image: user.image,
           role: user.role
-        };
+        } as UserWithRole;
       }
     })
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        // Aggiungi le proprietà personalizzate al token
+        token.role = (user as UserWithRole).role;
         token.id = user.id;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
-        session.user.role = token.role;
-        session.user.id = token.id;
+        // Aggiungi le proprietà personalizzate alla sessione
+        session.user = {
+          ...session.user,
+          role: token.role as string,
+          id: token.id as string
+        };
       }
       return session;
     }
