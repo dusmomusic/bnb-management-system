@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // PUT /api/bookings/:id
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,7 +18,7 @@ export async function PUT(
     }
 
     const data = await request.json();
-    const id = params.id;
+    const id = context.params.id;
 
     // Verifica che non ci siano sovrapposizioni con altre prenotazioni
     const overlappingBooking = await prisma.booking.findFirst({
@@ -69,7 +69,7 @@ export async function PUT(
 // DELETE /api/bookings/:id
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -78,7 +78,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
-    const id = params.id;
+    const id = context.params.id;
     
     await prisma.booking.delete({
       where: { id }
