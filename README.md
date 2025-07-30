@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BNB Management System
 
-## Getting Started
+Sistema di gestione per B&B e proprietà con appartamenti e camere. Permette di gestire prenotazioni, contabilità, spese fisse/variabili e richieste.
 
-First, run the development server:
+## Funzionalità principali
+
+1. **Gestione Proprietà e Unità**
+   - Creazione e gestione di proprietà (palazzine, case, ville)
+   - Gestione di unità (appartamenti, camere) all'interno delle proprietà
+   - Impostazione prezzi base e stagionali
+
+2. **Prenotazioni**
+   - Calendario visuale con drag-and-drop
+   - Prevenzione sovrapposizioni
+   - Tracking fonte prenotazione (Booking.com, AirBnB, ecc.)
+
+3. **Contabilità**
+   - Gestione spese fisse ricorrenti (mensili/annuali)
+   - Spese variabili
+   - Report P&L per proprietà
+   - Fatturazione
+
+4. **Contatti e Richieste**
+   - Archivio contatti con tagging
+   - Gestione richieste con sistema Kanban
+   - Conversione richieste in prenotazioni
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL 15 con Prisma 5 come ORM
+- **Autenticazione**: NextAuth con ruoli (Admin, Staff, Viewer)
+- **Deployment**: Netlify con GitHub Actions per CI/CD
+
+## Requisiti
+
+- Node.js 20+
+- Docker e Docker Compose (per il database locale)
+- Git
+
+## Setup locale
+
+1. **Clona il repository**
+
+```bash
+git clone https://github.com/username/bnb-management-system.git
+cd bnb-management-system
+```
+
+2. **Installa le dipendenze**
+
+```bash
+npm install
+```
+
+3. **Avvia il database PostgreSQL con Docker**
+
+```bash
+docker compose up -d
+```
+
+4. **Configura le variabili d'ambiente**
+
+Crea un file `.env.local` nella root del progetto:
+
+```
+DATABASE_URL="postgresql://bnbadmin:bnbpassword@localhost:5432/bnbdb"
+NEXTAUTH_SECRET="il-tuo-secret-per-nextauth"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+5. **Esegui le migrazioni e popola il database**
+
+```bash
+npx prisma migrate dev
+npm run seed
+```
+
+6. **Avvia l'applicazione in modalità sviluppo**
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+L'applicazione sarà disponibile all'indirizzo [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Credenziali di default
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Admin**: admin@example.com / change-me
+- **Staff**: staff@example.com / staff-password
+- **Viewer**: viewer@example.com / viewer-password
 
-## Learn More
+## Deployment su Netlify
 
-To learn more about Next.js, take a look at the following resources:
+1. **Collega il repository GitHub a Netlify**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Configura le variabili d'ambiente su Netlify**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   - `DATABASE_URL`: URL del database PostgreSQL
+   - `NEXTAUTH_SECRET`: Secret per NextAuth
+   - `NEXTAUTH_URL`: URL del sito Netlify
 
-## Deploy on Vercel
+3. **Configura la Scheduled Function per le spese fisse**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Per attivare la generazione automatica delle spese fisse il 1° di ogni mese:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Installa Netlify CLI: `npm install -g netlify-cli`
+2. Configura la Scheduled Function:
+
+```bash
+netlify functions:create --name generate-expenses
+```
+
+Modifica il file generato per eseguire lo script:
+
+```js
+const { exec } = require('child_process');
+
+exports.handler = async function(event, context) {
+  return new Promise((resolve, reject) => {
+    exec('npm run cron:expenses', (error, stdout, stderr) => {
+      if (error) {
+        return reject({ statusCode: 500, body: stderr });
+      }
+      return resolve({
+        statusCode: 200,
+        body: JSON.stringify({ message: "Fixed expenses generated successfully" })
+      });
+    });
+  });
+};
+```
+
+3. Imposta la pianificazione nella dashboard di Netlify:
+   - Vai su "Site settings" > "Functions" > "Scheduled functions"
+   - Aggiungi una nuova pianificazione con cron expression `0 0 1 * *` (esecuzione il 1° di ogni mese)
+
+## Licenza
+
+MIT

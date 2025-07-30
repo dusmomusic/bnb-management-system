@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  image         String?
+  role          Role      @default(STAFF)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  VIEWER
+}
+
+model Property {
+  id              String           @id @default(cuid())
+  name            String
+  address         String
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  units           Unit[]
+  fixedExpenses   FixedExpense[]
+  variableExpenses VariableExpense[]
+
+  @@map("properties")
+}
+
+model Unit {
+  id              String           @id @default(cuid())
+  propertyId      String
+  name            String
+  type            UnitType
+  beds            Int
+  bath            Int
+  surface         Float
+  basePrice       Float
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  property        Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
+  fixedExpenses   FixedExpense[]
+  variableExpenses VariableExpense[]
+
+  @@map("units")
+}
+
+enum UnitType {
+  ROOM
+  APARTMENT
+}
+
+model Guest {
+  id              String           @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  address         String?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  bookings        Booking[]
+
+  @@map("guests")
+}
+
+model Booking {
+  id              String           @id @default(cuid())
+  unitId          String
+  guestId         String
+  startDate       DateTime
+  endDate         DateTime
+  price           Float
+  source          String?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  unit            Unit             @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  guest           Guest            @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
+  @@index([unitId, startDate, endDate])
+}
+
+model FixedExpense {
+  id              String           @id @default(cuid())
+  propertyId      String
+  unitId          String?
+  description     String
+  amount          Float
+  recurrence      RecurrenceType
+  startDate       DateTime
+  endDate         DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  property        Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit            Unit?            @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  @@map("fixed_expenses")
+}
+
+enum RecurrenceType {
+  MONTHLY
+  ANNUAL
+}
+
+model VariableExpense {
+  id              String           @id @default(cuid())
+  propertyId      String
+  unitId          String?
+  date            DateTime
+  description     String
+  amount          Float
+  category        String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  property        Property         @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit            Unit?            @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  @@map("variable_expenses")
+}
+
+model Invoice {
+  id              String           @id @default(cuid())
+  number          String           @unique
+  date            DateTime
+  dueDate         DateTime
+  amount          Float
+  status          InvoiceStatus    @default(PENDING)
+  pdfUrl          String?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model Contact {
+  id              String           @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  company         String?
+  tags            String[]
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  inquiries       Inquiry[]
+
+  @@map("contacts")
+}
+
+model Inquiry {
+  id              String           @id @default(cuid())
+  contactId       String
+  subject         String
+  message         String
+  status          InquiryStatus    @default(NEW)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  contact         Contact          @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@map("inquiries")
+}
+
+enum InquiryStatus {
+  NEW
+  IN_PROGRESS
+  CLOSED
+} 
