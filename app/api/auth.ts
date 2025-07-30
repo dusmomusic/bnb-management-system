@@ -67,13 +67,19 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      // Verifica che session.user esista
+      if (!session.user) {
+        session.user = {};
+      }
+      
       // Usa un approccio più diretto per costruire l'oggetto session
       return {
         ...session,
         user: {
-          name: session.user.name,
-          email: session.user.email,
-          image: session.user.image,
+          // Usa valori predefiniti nel caso in cui le proprietà siano undefined
+          name: session.user.name || null,
+          email: session.user.email || null,
+          image: session.user.image || null,
           // Aggiungi le proprietà personalizzate
           role: token.role as string,
           id: token.id as string
