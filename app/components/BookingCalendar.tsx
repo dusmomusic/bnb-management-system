@@ -23,6 +23,13 @@ type SessionWithUser = {
   expires: string;
 };
 
+// Estendi DateSelectArg per includere la proprietà resource
+interface ExtendedDateSelectArg extends DateSelectArg {
+  resource?: {
+    id: string;
+  };
+}
+
 interface BookingWithUnitAndGuest extends Booking {
   unit: Unit;
   guest: {
@@ -130,7 +137,10 @@ export default function BookingCalendar({ properties }: BookingCalendarProps) {
       return;
     }
 
-    const resourceId = selectInfo.resource?.id;
+    // Cast a ExtendedDateSelectArg per accedere alla proprietà resource
+    const extendedSelectInfo = selectInfo as ExtendedDateSelectArg;
+    const resourceId = extendedSelectInfo.resource?.id;
+    
     if (!resourceId) return;
 
     router.push(
