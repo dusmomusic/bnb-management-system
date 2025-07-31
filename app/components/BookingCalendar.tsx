@@ -8,6 +8,21 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Property, Unit, Booking } from '@prisma/client';
 
+// Definisci un tipo per l'utente con la proprietà role
+type UserWithRole = {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string;
+};
+
+// Definisci un tipo per la sessione con l'utente esteso
+type SessionWithUser = {
+  user?: UserWithRole;
+  expires: string;
+};
+
 interface BookingWithUnitAndGuest extends Booking {
   unit: Unit;
   guest: {
@@ -30,6 +45,14 @@ export default function BookingCalendar({ properties }: BookingCalendarProps) {
   const calendarRef = useRef<FullCalendar | null>(null);
   const { data: session } = useSession();
   const router = useRouter();
+
+  // Cast della sessione al tipo personalizzato
+  const typedSession = session as SessionWithUser | null;
+  
+  // Funzione helper per verificare il ruolo dell'utente
+  const isViewer = (): boolean => {
+    return typedSession?.user?.role === 'VIEWER';
+  };
 
   // Carica le unità quando cambia la proprietà selezionata
   useEffect(() => {
@@ -102,7 +125,7 @@ export default function BookingCalendar({ properties }: BookingCalendarProps) {
 
   // Gestisce la selezione di un intervallo di date
   const handleDateSelect = (selectInfo: DateSelectArg) => {
-    if (session?.user?.role === 'VIEWER') {
+    if (isViewer()) {
       alert('Non hai i permessi per creare prenotazioni');
       return;
     }
@@ -122,7 +145,7 @@ export default function BookingCalendar({ properties }: BookingCalendarProps) {
 
   // Gestisce lo spostamento di un evento
   const handleEventDrop = async (dropInfo: EventDropArg) => {
-    if (session?.user?.role === 'VIEWER') {
+    if (isViewer()) {
       alert('Non hai i permessi per modificare prenotazioni');
       dropInfo.revert();
       return;
@@ -223,8 +246,8 @@ export default function BookingCalendar({ properties }: BookingCalendarProps) {
                 title: unit.name
               }))}
               events={events}
-              editable={session?.user?.role !== 'VIEWER'}
-              selectable={session?.user?.role !== 'VIEWER'}
+              editable={!isViewer()}
+              selectable={!isViewer()}
               selectMirror={true}
               dayMaxEvents={true}
               select={handleDateSelect}
