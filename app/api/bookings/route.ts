@@ -5,6 +5,15 @@ import { authOptions } from '../auth';
 
 const prisma = new PrismaClient();
 
+// Definisci un tipo per l'utente con le proprietà che ci servono
+type UserWithRole = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role: string;
+};
+
 // GET /api/bookings
 export async function GET(request: Request) {
   try {
@@ -96,7 +105,13 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user || session.user.role === 'VIEWER') {
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
+    }
+
+    // Utilizza un cast di tipo esplicito per accedere alla proprietà role
+    const userRole = (session.user as UserWithRole).role;
+    if (userRole === 'VIEWER') {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
@@ -151,7 +166,13 @@ export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user || session.user.role === 'VIEWER') {
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
+    }
+
+    // Utilizza un cast di tipo esplicito per accedere alla proprietà role
+    const userRole = (session.user as UserWithRole).role;
+    if (userRole === 'VIEWER') {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
@@ -213,7 +234,13 @@ export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user || session.user.role !== 'ADMIN') {
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
+    }
+
+    // Utilizza un cast di tipo esplicito per accedere alla proprietà role
+    const userRole = (session.user as UserWithRole).role;
+    if (userRole !== 'ADMIN') {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
